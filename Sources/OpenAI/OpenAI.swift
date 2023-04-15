@@ -50,9 +50,27 @@ public struct ChatCompletionResponse: Codable {
     public let object: String
     public let created: Int
     public let model: String
-    public let usage: CompletionResponse.Usage
-    public let choices: [CompletionResponse.Choice]
+    public let usage: Usage
+    public let choices: [Choice]
+
+    public struct Usage: Codable {
+        public let prompt_tokens: Int
+        public let completion_tokens: Int
+        public let total_tokens: Int
+    }
+
+    public struct Choice: Codable {
+        public let message: Message
+        public let finish_reason: String
+        public let index: Int
+        
+        public struct Message: Codable {
+            public let role: String
+            public let content: String
+        }
+    }
 }
+
 
 public class OpenAI {
     private let apiKey: String
