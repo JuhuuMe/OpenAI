@@ -72,13 +72,16 @@ public class OpenAI {
 
         AF.request(baseURL, method: .post, parameters: requestPayload, encoder: JSONParameterEncoder.default, headers: headers)
             .validate()
-            .responseDecodable(of: ChatCompletionResponse.self) { response in
+            .responseDecodable(of: ChatCompletionResponse.self) { (response: DataResponse<ChatCompletionResponse, AFError>) in
                 switch response.result {
                 case .success(let chatCompletionResult):
                     completion(.success(chatCompletionResult))
                 case .failure(let error):
+                    print("Raw response data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")") // Added this line to print raw response data
                     completion(.failure(error))
                 }
             }
     }
+
+
 }
