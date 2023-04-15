@@ -30,23 +30,40 @@ public struct CompletionResponse: Codable {
     }
 }
 
-struct CompletionRequest: Codable {
-    let model: String
-    let prompt: String
-    let maxTokens: Int
-    let temperature: Double
+public struct ChatCompletionRequest: Codable {
+    public let model: String
+    public let messages: [Message]
+    
+    public struct Message: Codable {
+        public let role: String
+        public let content: String
+
+        public init(role: String, content: String) {
+            self.role = role
+            self.content = content
+        }
+    }
+}
+
+public struct ChatCompletionResponse: Codable {
+    public let id: String
+    public let object: String
+    public let created: Int
+    public let model: String
+    public let usage: CompletionResponse.Usage
+    public let choices: [CompletionResponse.Choice]
 }
 
 public class OpenAI {
     private let apiKey: String
-    private let baseURL = "https://api.openai.com/v1/completions"
+    private let baseURL = "https://api.openai.com/v1/chat/completions"
 
     public init(apiKey: String) {
         self.apiKey = apiKey
     }
 
-    public func complete(prompt: String, maxTokens: Int, temperature: Double, completion: @escaping (Result<CompletionResponse, Error>) -> Void) {
-        let requestPayload = CompletionRequest(model: "text-davinci-003", prompt: prompt, maxTokens: maxTokens, temperature: temperature)
+    public func chatCompletion(model: String = "gpt-3.5-turbo", messages: [ChatCompletionRequest.Message], completion: @escaping (Result<ChatCompletionResponse, Error>) -> Void) {
+        let requestPayload = ChatCompletionRequest(model: model, messages: messages)
         
         let headers: HTTPHeaders = [
             "Content-Type": "application/json",
@@ -55,10 +72,10 @@ public class OpenAI {
 
         AF.request(baseURL, method: .post, parameters: requestPayload, encoder: JSONParameterEncoder.default, headers: headers)
             .validate()
-            .responseDecodable(of: CompletionResponse.self) { response in
+            .responseDecodable(of: ChatCompletionResponse.self) { response in
                 switch response.result {
-                case .success(let completionResult):
-                    completion(.success(completionResult))
+                case .success(let chatCompletionResult):
+                    completion(.success(chatCompletionResult))
                 case .failure(let error):
                     completion(.failure(error))
                 }
